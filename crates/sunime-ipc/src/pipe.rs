@@ -6,10 +6,8 @@ use interprocess::os::windows::named_pipe::{
 
 use crate::messages::{NUL, Request, Response, decode_message, encode_message};
 
-pub const PIPE_NAME: &str = "sunime.pipe";
-
 pub fn pipe_path() -> String {
-    format!(r"\\.\pipe\{PIPE_NAME}")
+    r"\\.\pipe\sunime".to_string()
 }
 
 pub struct IpcServer {
@@ -18,8 +16,9 @@ pub struct IpcServer {
 
 impl IpcServer {
     pub fn bind() -> io::Result<Self> {
+        let path = pipe_path();
         let listener = PipeListenerOptions::new()
-            .path(PIPE_NAME)
+            .path(path.as_str())
             .mode(PipeMode::Bytes)
             .create_duplex::<Bytes>()?;
         Ok(Self { listener })
