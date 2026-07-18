@@ -7,11 +7,11 @@ pub fn run(engine: sunime_core::Engine) {
     let mut state = ImeState::new(engine);
 
     let server = IpcServer::bind().unwrap_or_else(|e| {
-        eprintln!("Failed to bind: {e}");
+        eprintln!("Failed to bind pipe: {e}");
         std::process::exit(1);
     });
 
-    println!("Listening on {}", server.addr());
+    println!("Listening on {}", sunime_ipc::pipe::pipe_path());
 
     loop {
         let Ok(mut conn) = server.accept() else {

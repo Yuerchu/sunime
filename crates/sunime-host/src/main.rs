@@ -15,7 +15,7 @@ fn main() {
 
     println!("SunIME Host");
     println!("  Dict: {}", dict_dir.display());
-    println!("  Addr: {}", sunime_ipc::pipe::addr());
+    println!("  Pipe: {}", sunime_ipc::pipe::pipe_path());
 
     let dict = sunime_dict::reader::Dict::open(&dict_dir).unwrap_or_else(|e| {
         eprintln!("Failed to open dictionary: {e}");
