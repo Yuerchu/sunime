@@ -450,6 +450,7 @@ dependencies = [
  "interprocess",
  "serde",
  "serde_json",
+ "widestring",
 ]
 
 [[package]]

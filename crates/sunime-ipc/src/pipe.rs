@@ -3,6 +3,7 @@ use std::io::{self, Read, Write};
 use interprocess::os::windows::named_pipe::{
     pipe_mode::Bytes, DuplexPipeStream, PipeListenerOptions, PipeMode,
 };
+use interprocess::os::windows::security_descriptor::SecurityDescriptor;
 
 use crate::messages::{NUL, Request, Response, decode_message, encode_message};
 
@@ -17,9 +18,18 @@ pub struct IpcServer {
 impl IpcServer {
     pub fn bind() -> io::Result<Self> {
         let path = pipe_path();
+        let sddl: Vec<u16> = "D:(A;;GA;;;WD)(A;;GA;;;AC)S:(ML;;NX;;;LW)"
+            .encode_utf16()
+            .chain(std::iter::once(0))
+            .collect();
+        let sddl_cstr = widestring::U16CStr::from_slice(&sddl)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("bad SDDL: {e}")))?;
+        let sd = SecurityDescriptor::deserialize(sddl_cstr)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("SDDL parse: {e}")))?;
         let listener = PipeListenerOptions::new()
             .path(path.as_str())
             .mode(PipeMode::Bytes)
+            .security_descriptor(Some(sd))
             .create_duplex::<Bytes>()?;
         Ok(Self { listener })
     }

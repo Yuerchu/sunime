@@ -9,3 +9,4 @@ authors.workspace = true
 interprocess = "2"
 serde = { workspace = true }
 serde_json = { workspace = true }
+widestring = "1.2.1"
