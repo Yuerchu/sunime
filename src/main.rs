@@ -4,7 +4,7 @@ use std::time::Instant;
 
 use crossterm::{
     cursor, execute,
-    event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
+    event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
     style::Stylize,
     terminal::{self, ClearType},
 };
@@ -124,9 +124,12 @@ fn cmd_ime(args: &[String]) {
             continue;
         }
 
-        let Event::Key(KeyEvent { code, modifiers, .. }) = event::read().unwrap() else {
+        let Event::Key(KeyEvent { code, modifiers, kind, .. }) = event::read().unwrap() else {
             continue;
         };
+        if kind != KeyEventKind::Press {
+            continue;
+        }
 
         if modifiers.contains(KeyModifiers::CONTROL) && code == KeyCode::Char('c') {
             break;
