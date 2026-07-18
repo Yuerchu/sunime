@@ -1,3 +1,4 @@
+mod compose;
 mod pinyin;
 
 use sunime_dict::Candidate;
@@ -15,28 +16,6 @@ impl Engine {
     }
 
     pub fn lookup(&self, input: &str) -> Vec<Candidate> {
-        let syllables = segment(input);
-        if syllables.is_empty() {
-            return Vec::new();
-        }
-
-        let code = syllables.join(" ");
-        let mut results = self.dict.lookup(&code);
-
-        if results.is_empty() && syllables.len() == 1 {
-            return results;
-        }
-
-        if results.is_empty() {
-            for s in &syllables {
-                let mut chars = self.dict.lookup(s);
-                if !chars.is_empty() {
-                    chars.truncate(1);
-                    results.extend(chars);
-                }
-            }
-        }
-
-        results
+        compose::compose(input, &self.dict, 9)
     }
 }
