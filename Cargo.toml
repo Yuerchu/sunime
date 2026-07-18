@@ -7,7 +7,19 @@ version = "0.1.0"
 edition = "2024"
 license = "GPL-3.0-only"
 authors = ["于小丘 Yuerchu <admin@yuxiaoqiu.cn>"]
-repository = "https://git.yxqi.cn/yuerchu/sunime"
+repository = "https://github.com/Yuerchu/sunime"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+windows = { version = "0.62", features = [
+  "Win32_Foundation",
+  "Win32_System_Com",
+  "Win32_System_LibraryLoader",
+  "Win32_UI_TextServices",
+  "Win32_UI_Input_KeyboardAndMouse",
+] }
+windows-core = "0.62"
 
 [package]
 name = "sunime"

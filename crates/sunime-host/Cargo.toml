@@ -1,0 +1,16 @@
+[package]
+name = "sunime-host"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "sunime-host"
+path = "src/main.rs"
+
+[dependencies]
+sunime-core = { path = "../sunime-core" }
+sunime-dict = { path = "../sunime-dict" }
+sunime-ipc = { path = "../sunime-ipc" }
+serde_json = { workspace = true }
