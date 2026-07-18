@@ -1,3 +1,4 @@
+mod ipc;
 mod text_service;
 
 use std::sync::atomic::{AtomicPtr, Ordering};
