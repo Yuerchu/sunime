@@ -181,7 +181,8 @@ fn assemble_candidates(
     lattice: &[Vec<WordEdge>],
     max_results: usize,
 ) -> Vec<Candidate> {
-    let mut results: Vec<(String, f64)> = Vec::new();
+    // (text, rank_score, display_freq)
+    let mut results: Vec<(String, f64, u32)> = Vec::new();
     let mut seen = std::collections::HashSet::new();
 
     for path in paths {
@@ -191,29 +192,35 @@ fn assemble_candidates(
             .collect();
 
         let base_text: String = base.iter().map(|c| c.text.as_str()).collect();
-        let base_score: f64 = base.iter().map(|c| word_score(c)).sum::<f64>()
-            - path.len() as f64 * WORD_COUNT_PENALTY;
+        let log_freq_sum: f64 = base.iter().map(|c| word_score(c)).sum();
+        let rank_score = log_freq_sum - path.len() as f64 * WORD_COUNT_PENALTY;
+        let geo_mean = (log_freq_sum / path.len() as f64).exp();
+        let display_freq = geo_mean.min(u32::MAX as f64) as u32;
 
         if seen.insert(base_text.clone()) {
-            results.push((base_text, base_score));
+            results.push((base_text, rank_score, display_freq));
         }
 
         for (word_idx, &(pos, edge_idx)) in path.iter().enumerate() {
             let edge = &lattice[pos][edge_idx];
             for alt_idx in 1..edge.candidates.len().min(MAX_ALTS_PER_WORD) {
                 let mut text = String::new();
+                let mut alt_log_sum = 0.0f64;
                 for (i, &(p, ei)) in path.iter().enumerate() {
                     if i == word_idx {
                         text.push_str(&edge.candidates[alt_idx].text);
+                        alt_log_sum += word_score(&edge.candidates[alt_idx]);
                     } else {
                         text.push_str(&lattice[p][ei].candidates[0].text);
+                        alt_log_sum += word_score(&lattice[p][ei].candidates[0]);
                     }
                 }
-                let alt_score = base_score - word_score(&edge.candidates[0])
-                    + word_score(&edge.candidates[alt_idx]);
+                let alt_rank = alt_log_sum - path.len() as f64 * WORD_COUNT_PENALTY;
+                let alt_geo = (alt_log_sum / path.len() as f64).exp();
+                let alt_display = alt_geo.min(u32::MAX as f64) as u32;
 
                 if seen.insert(text.clone()) {
-                    results.push((text, alt_score));
+                    results.push((text, alt_rank, alt_display));
                 }
             }
             if results.len() >= max_results * 2 {
@@ -225,11 +232,20 @@ fn assemble_candidates(
     results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
     results.truncate(max_results);
 
+    if results.is_empty() {
+        return Vec::new();
+    }
+
+    let top_score = results[0].1;
     results
         .into_iter()
-        .map(|(text, score)| Candidate {
-            text,
-            freq: score.exp().min(u32::MAX as f64) as u32,
+        .map(|(text, rank_score, _)| {
+            let diff = top_score - rank_score;
+            let confidence = (100.0 * (-diff * 0.1).exp()).round() as u32;
+            Candidate {
+                text,
+                freq: confidence.max(1),
+            }
         })
         .collect()
 }
