@@ -1,0 +1,10 @@
+[package]
+name = "sunime-dict"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+fst = "0.4"
+memmap2 = "0.9"
